@@ -20,6 +20,7 @@ class Message
 	// => 클라이언트는 메시지에서 prefix를 사용해서는 안됨
 	// => 클라이언트에서 사용이 가능한 prefix는 클라이언트의 닉네임 설정뿐임
 	// RFC 2812 p4 ~ p5 2.3 messages
+	// src/commands.cpp/nick함수 참고
 
 	// command : irc command 또는 3자리의 아스키 코드값 만 가능
 

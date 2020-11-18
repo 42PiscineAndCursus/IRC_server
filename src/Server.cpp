@@ -544,6 +544,8 @@ void Server::tochannel(Channel &channel, Message &msg)
 
 void Server::not_params(Message &msg)
 {
+	// ERR_NEEDMOREPARAMS : 클라이언트에서 전송한 메시지에 충분한 파라미터가 없는경우 리턴
+	// 예 : "<command> :Not enough parameters"
 	std::string words[] = {this->ip, " ", ERR_NEEDMOREPARAMS, " ", \
 	msg.orig->nick, " ", msg.command, " :Not enough parameters", "NULL" };
 	sendmsg(msg.orig->socket, buildString(words));

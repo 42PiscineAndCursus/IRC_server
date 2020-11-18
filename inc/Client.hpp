@@ -40,8 +40,10 @@ class Client
 		void	setIP(std::string const &ip);
 		void	setSSL(SSL *ssl);
 		int		setClient();
+		// client의 타입을 설정함 + 클라이언트에 해당하는 prefix를 설정
 		void	make_prefix();
-		
+		// TODO 왜 이 함수를 만들었는지 모르겠음
+
 };
 
 # endif

@@ -61,6 +61,7 @@ class Server
 		void sendmsg(int socket, std::string const &str);
 		// secket에 해당하는 클라이언트에 메시지 전송
 		void sendmsg(int orig, int dest, std::string code, std::string const &str);
+		// 메시지 전송하는 함수
 		void receive(int socket);
 		// 소켓으로 부터 전송되는 메시지 수신 및 처리
 		void ssl_receive(int socket);
@@ -72,6 +73,7 @@ class Server
 		Client* getClientByUser(std::string const &user);
 		Client* getClient(std::string const &nick);
 		Channel &getChannel(std::string const &ch);
+		// 해당하는 채널을 받아옴
 		Channel &getOtherChannel(std::string const &ch);
 		void deleteClient(int socket);
 		// 소켓에 해당하는 client를 삭제함
@@ -81,14 +83,19 @@ class Server
 
 		bool isvalid(Message &msg);
 		int exec(Message &msg);
+		// 프로토콜에 맞추어 메시지를 처리하는 부분
 		bool isServer(std::string const &nick);
 
 		std::vector<Channel>::iterator exists(std::string &channel);
 
 		void quit(Message &msg);
 		void pass(Message &msg);
+		// pass메시지 처리하는 함수
 		void nick(Message &msg);
+		// nick을 등록하려는 함수
+		// TODO server preserver nick설정 확인하지 않음
 		void user(Message &msg);
+		// user등록하는 함수
 		void privmsg(Message &msg);
 		void join(Message &msg);
 		void part(Message &msg);
@@ -102,6 +109,7 @@ class Server
 		void oper(Message &msg);
 		void topic(Message &msg);
 		void notice(Message &msg);
+		// notice메시지 처리하는 함수
 		void whois(Message &msg);
 		void who(Message &msg);
 		void mode(Message &msg);
@@ -118,7 +126,9 @@ class Server
 		void addchannel(Message &msg);
 
 		void new_nick(Message &msg);
+		// 최초로 닉네임을 등록하는 경우
 		void re_nick(Message &msg);
+		// 닉네임 재설정
 		void sendusers(Message &msg);
 		void sendchannels(Message &msg);
 		void newjoin(Message &msg);

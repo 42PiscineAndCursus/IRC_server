@@ -44,7 +44,6 @@ size_t split(const std::string &txt, std::list<std::string> &strs, char ch)
 	strs.clear();
 	while( pos != std::string::npos )
 	{
-		std::cout << "txt = " << txt.substr(initialPos, pos - initialPos) << std::endl;
 		strs.push_back(txt.substr(initialPos, pos - initialPos));
 		while (txt.at(initialPos) != ch)
 			++initialPos;
@@ -57,9 +56,10 @@ size_t split(const std::string &txt, std::list<std::string> &strs, char ch)
 		// initialPos를 다음 위치로 이동시킴
 		pos = txt.find( ch, initialPos );
 	}
-	std::cout << "last = " << txt.substr(initialPos, std::string::npos) << std::endl;
 	if (txt.at(txt.length() - 1) != ch)
 		strs.push_back( txt.substr( initialPos, std::min( pos, txt.size() ) - initialPos + 1 ) );
+	// USER 메시지의 파라미터인 realname에는 공백이 들어올 수 있음
+	// 하지만 이 split함수의 경우 이 부분을 처리하지 못함
 	return strs.size();
 }
 
