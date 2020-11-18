@@ -323,6 +323,7 @@ void Server::receive(int socket)
 	Client *tmp;
 
 	tmp = getClient(socket);
+	std::cout << "before client type = " << tmp->type << std::endl;
 	// 소켓에 해당하는 클라이언트를 받아옴
 	// getClient는 null을 리턴할 수 있음
 	// main_loop에서 소켓에 해당하는 클라이언트가 없는경우를 보호하고 있기 때문에
@@ -332,15 +333,6 @@ void Server::receive(int socket)
 		// TODO 왜 이런 방식으로 코드를 작성하였는지 이해 못함
 		tmp->count += rec;
 	}
-	int i;
-
-	i = -1;
-	printf("message = ");
-	while (++i < rec)
-	{
-		printf(" %d ", tmp->buff[i]);
-	}
-	printf("\n");
 	if (rec == -1)
 	{
 		print(strerror(rec));
@@ -368,6 +360,7 @@ void Server::receive(int socket)
 		tmp->resetBuffer();
 		// client의 buffer 및 count초기화
 	}
+	std::cout << "after client type = " << tmp->type << std::endl;
 }
 
 void Server::receive_noexec(int socket)
@@ -544,6 +537,8 @@ void Server::tochannel(Channel &channel, Message &msg)
 
 void Server::not_params(Message &msg)
 {
+	// ERR_NEEDMOREPARAMS : 클라이언트에서 전송한 메시지에 충분한 파라미터가 없는경우 리턴
+	// 예 : "<command> :Not enough parameters"
 	std::string words[] = {this->ip, " ", ERR_NEEDMOREPARAMS, " ", \
 	msg.orig->nick, " ", msg.command, " :Not enough parameters", "NULL" };
 	sendmsg(msg.orig->socket, buildString(words));

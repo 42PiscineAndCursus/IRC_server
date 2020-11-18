@@ -81,14 +81,19 @@ class Server
 
 		bool isvalid(Message &msg);
 		int exec(Message &msg);
+		// 프로토콜에 맞추어 메시지를 처리하는 부분
 		bool isServer(std::string const &nick);
 
 		std::vector<Channel>::iterator exists(std::string &channel);
 
 		void quit(Message &msg);
 		void pass(Message &msg);
+		// pass메시지 처리하는 함수
 		void nick(Message &msg);
+		// nick을 등록하려는 함수
+		// TODO server preserver nick설정 확인하지 않음
 		void user(Message &msg);
+		// user등록하는 함수
 		void privmsg(Message &msg);
 		void join(Message &msg);
 		void part(Message &msg);
@@ -118,7 +123,9 @@ class Server
 		void addchannel(Message &msg);
 
 		void new_nick(Message &msg);
+		// 최초로 닉네임을 등록하는 경우
 		void re_nick(Message &msg);
+		// 닉네임 재설정
 		void sendusers(Message &msg);
 		void sendchannels(Message &msg);
 		void newjoin(Message &msg);
