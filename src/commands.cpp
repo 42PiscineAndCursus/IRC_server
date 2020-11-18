@@ -150,7 +150,7 @@ void Server::quit(Message &msg)
             tochannel((*it).name, buildString(words), msg.orig->socket);
         }
     }
-	
+
     std::string str[] = {"Error: Closing link: ", msg.orig->ip, " (Client quit)", "NULL"};
     sendmsg(msg.orig->socket, buildString(str));
 	std::string fwd[] = {
@@ -160,7 +160,7 @@ void Server::quit(Message &msg)
 	forward(buildString(fwd));
     close(msg.orig->socket);
     FD_CLR(msg.orig->socket, &master);
-	
+
     delete msg.orig;
     if (msg.prefix.length() < 2)
 		clients.erase(std::find(clients.begin(), clients.end(), msg.orig));
@@ -224,7 +224,7 @@ void Server::privmsg(Message &msg)
 			std::string rpl[] = { msg.orig->prefix, " ", msg.msg, "NULL"};
 			forward(buildString(rpl));
 			return;
-		} 
+		}
 		else {
 			std::string words[] = {":", ip, " ", ERR_NOSUCHNICK, " ", msg.orig->nick, \
 			" ", dest, " :No such nick/channel", "NULL"};
@@ -242,7 +242,7 @@ void Server::privmsg(Message &msg)
 			std::string rpl[] = { msg.orig->prefix, " ", msg.msg, "NULL"};
 			forward(buildString(rpl));
 			return;
-		}	
+		}
 		std::string words[] = {":", ip, " ", ERR_NOSUCHNICK, " ", msg.orig->nick, \
 		" ", dest, " :No such nick/channel", "NULL"};
 		sendmsg(msg.socket, buildString(words));
@@ -314,7 +314,7 @@ void Server::notice(Message &msg)
 			std::string rpl[] = { msg.orig->prefix, " ", msg.msg, "NULL"};
 			forward(buildString(rpl));
 			return;
-		} 
+		}
 		else {
 			std::string words[] = {":", ip, " ", ERR_NOSUCHNICK, " ", msg.orig->nick, \
 			" ", dest, " :No such nick/channel", "NULL"};
@@ -332,7 +332,7 @@ void Server::notice(Message &msg)
 			std::string rpl[] = { msg.orig->prefix, " ", msg.msg, "NULL"};
 			forward(buildString(rpl));
 			return;
-		}	
+		}
 		std::string words[] = {":", ip, " ", ERR_NOSUCHNICK, " ", msg.orig->nick, \
 		" ", dest, " :No such nick/channel", "NULL"};
 		sendmsg(msg.socket, buildString(words));
@@ -488,7 +488,7 @@ void	Server::server(Message &msg)
 				{
 					tmp->type = "preserver";
 					std::string srvrply[] = {
-						"SERVER ft_irc_main 1 1 ", 
+						"SERVER ft_irc_main 1 1 ",
 						" no_info", "NULL" };
 					sendmsg(tmp->socket, buildString(srvrply));
 				}
@@ -513,7 +513,7 @@ void	Server::server(Message &msg)
 }
 
 void	Server::lusers(Client *cli)
-{	
+{
 	int users = 0, clients = 0, oper = 0, servers = 1, unknown = 0;
 	int invisible = 0;
 
@@ -726,7 +726,7 @@ void Server::oper(Message &msg)
 			};
 			sendmsg(msg.socket, buildString(rpl));
 		}
-	}	
+	}
 }
 
 void	Server::whois(Message &msg)
@@ -761,8 +761,8 @@ void	Server::whois(Message &msg)
 		}
 	}
 	std::string info2[] = {
-		":", ip, " ", RPL_WHOISCHANNELS, " ", msg.orig->nick, " ", cli->nick, 
-		" :", chstr 
+		":", ip, " ", RPL_WHOISCHANNELS, " ", msg.orig->nick, " ", cli->nick,
+		" :", chstr
 		,"NULL"
 	};
 	sendmsg(msg.socket, buildString(info2));
@@ -806,7 +806,7 @@ void	Server::who(Message &msg)
 		" :End of /WHO list."
 		,"NULL"
 	};
-	sendmsg(msg.socket, buildString(rpl));	
+	sendmsg(msg.socket, buildString(rpl));
 }
 
 void	Server::mode(Message &msg)
@@ -826,7 +826,7 @@ void	Server::mode(Message &msg)
 			if (c.isClient(msg.orig->nick))
 			{
 				c.setPermissions(*(++(++msg.params.begin())), *(++msg.params.begin()));
-				
+
 				std::string rpl[] = {
 					msg.orig->prefix, "@", ip, " MODE ", c.name, " ", \
 					*(++msg.params.begin()), " ", *(++(++msg.params.begin())), "!*@*"
@@ -841,7 +841,7 @@ void	Server::mode(Message &msg)
 	}
 }
 	// Deberíamos poner nombres a los servers para poder seleccionar de cual
-	//queremoos sacar los parametros. 
+	//queremoos sacar los parametros.
 void Server::version(Message &msg)
 {
 	if (msg.params.size() > 0)
@@ -911,7 +911,7 @@ void Server::newuser(Message &msg)
 		it != msg.params.end(); ++it)
 	{
 		print(std::string("+otherclient ").append(*it));
-		
+
 		otherclients.push_back(*it);
 	}
 }
@@ -929,7 +929,7 @@ void Server::addchannel(Message &msg)
 	{
 		tmp.nicks.insert(std::make_pair<std::string,std::string>(*it, "-o-b"));
 	}
-	otherchannels.push_back(tmp);	
+	otherchannels.push_back(tmp);
 }
 
 void	Server::newjoin(Message &msg)
@@ -997,7 +997,7 @@ void	Server::stats(Message &msg)
 		not_operator(msg);
 		return;
 	}
-	
+
 	int users = 0, clients = 0, oper = 0, servers = 1, unknown = 0;
 	int invisible = 0;
 
@@ -1045,7 +1045,7 @@ void	Server::trace(Message &msg)
 {
 	if (msg.params.size() < 1 || (int)msg.orig->mode.find("+o") == -1)
 	{
-		std::string rpl[] = { 
+		std::string rpl[] = {
 		":", ip, " ", RPL_TRACEUSER, " ", msg.orig->nick, " User ",
 		msg.orig->nick, "[~", msg.orig->username, "] ", "NULL"};
 		sendmsg(msg.socket, buildString(rpl));
@@ -1123,7 +1123,7 @@ void	Server::connect(Message &msg)
 		if ((*it)->type == "server")
 		{
 			std::string srvrply[] = {
-					"SERVER ft_irc_main 0 0 ", 
+					"SERVER ft_irc_main 0 0 ",
 					" no_info", "NULL" };
 			sendmsg((*it)->socket, buildString(srvrply));
 			return;

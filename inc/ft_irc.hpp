@@ -5,7 +5,7 @@
 #endif
 # define WAITTIME 0.05
 # define SSLPORT "6669"
-# define IPADDRESS "xxxIPxxx" 
+# define IPADDRESS "169.254.44.86" 
 # include <stdio.h>
 # include <stdlib.h>
 # include <string.h>

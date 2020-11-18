@@ -24,7 +24,7 @@ class Server
 		std::vector<Channel> channels;
 		std::vector<Channel> otherchannels;
 
-		SSL_CTX	*ctx; 
+		SSL_CTX	*ctx;
 		SSL *ssl;
 
 		fd_set	master;
@@ -42,32 +42,39 @@ class Server
 		virtual ~Server();
 
 		void clear();
-	
+
 		void serv_connect();
 		void server_login();
 		void init_server();
 		void ssl_init();
 		void main_loop();
+		// 서버와의 통신을 수신하는 함수
 		void serv_select();
+		// select를 이용하여 그룹화된 fd에 변화가 생겼는지 체크
 		void ssl_serv_select();
 		void new_connection();
+		// 클라이언트의 접속 요청을 처리하는 함수
 		void ssl_new_connection();
 		std::string getInfo(void) const;
 		std::string getIp(void);
 
 		void sendmsg(int socket, std::string const &str);
+		// secket에 해당하는 클라이언트에 메시지 전송
 		void sendmsg(int orig, int dest, std::string code, std::string const &str);
 		void receive(int socket);
+		// 소켓으로 부터 전송되는 메시지 수신 및 처리
 		void ssl_receive(int socket);
 		void receive_noexec(int socket);
 
 		Client* getClient(int socket);
+		// socket에 해당하는 클라이언트를 받아옴
 		std::string getOtherClient(std::string const &nick);
 		Client* getClientByUser(std::string const &user);
 		Client* getClient(std::string const &nick);
 		Channel &getChannel(std::string const &ch);
 		Channel &getOtherChannel(std::string const &ch);
 		void deleteClient(int socket);
+		// 소켓에 해당하는 client를 삭제함
 		void sendjoin(const std::string &name, const std::string &nick);
 		void quitother(std::string const &nick);
 		void partother(std::string const &nick);

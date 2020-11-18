@@ -16,12 +16,11 @@ int main(int argc, char **argv)
 	(void)argc;
 	(void)argv;
 
-;	signal(SIGINT, sighandler);
+	signal(SIGINT, sighandler);
 	Server serv(argc, argv);
 	pserv = &serv;
 	serv.init_server();
 	if (argc == 4)
 		serv.serv_connect();
 	serv.main_loop();
-
 }
