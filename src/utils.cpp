@@ -7,54 +7,58 @@ void print(const std::string &str)
 
 size_t split(const std::string &txt, std::vector<std::string> &strs, char ch)
 {
-    size_t initialPos = 0;
+	// 아래의 split과 동일한 split임
+	size_t initialPos = 0;
 
 	while (txt.at(initialPos) == ch)
 		initialPos++;
 	size_t pos = txt.find( ch , initialPos);
-    strs.clear();
-    while( pos != std::string::npos )
+	strs.clear();
+	while( pos != std::string::npos )
 	{
-        strs.push_back(txt.substr(initialPos, pos - initialPos));
+		strs.push_back(txt.substr(initialPos, pos - initialPos));
 		while (txt.at(initialPos) != ch)
 			++initialPos;
-        while (txt.at(initialPos) == ch)
+		while (txt.at(initialPos) == ch)
 		{
 			initialPos++;
 			if (initialPos == txt.length())
 				break;
 		}
-        pos = txt.find( ch, initialPos );
-    }
+		pos = txt.find( ch, initialPos );
+	}
 	if (txt.at(txt.length() - 1) != ch)
-    	strs.push_back( txt.substr( initialPos, std::min( pos, txt.size() ) - initialPos + 1 ) );
-    return strs.size();
+		strs.push_back( txt.substr( initialPos, std::min( pos, txt.size() ) - initialPos + 1 ) );
+	return strs.size();
 }
 
 size_t split(const std::string &txt, std::list<std::string> &strs, char ch)
 {
-    size_t initialPos = 0;
+	size_t initialPos = 0;
 
 	while (txt.at(initialPos) == ch)
 		initialPos++;
+	// 문자열 초반에 나오는 공백 처리 무시
+	// initialPos = 공백을 제외한 문자열의 시작지점
 	size_t pos = txt.find( ch , initialPos);
-    strs.clear();
-    while( pos != std::string::npos )
+	strs.clear();
+	while( pos != std::string::npos )
 	{
-        strs.push_back(txt.substr(initialPos, pos - initialPos));
+		strs.push_back(txt.substr(initialPos, pos - initialPos));
 		while (txt.at(initialPos) != ch)
 			++initialPos;
-        while (txt.at(initialPos) == ch)
+		while (txt.at(initialPos) == ch)
 		{
 			initialPos++;
 			if (initialPos == txt.length())
 				break;
 		}
-        pos = txt.find( ch, initialPos );
-    }
+		// initialPos를 다음 위치로 이동시킴
+		pos = txt.find( ch, initialPos );
+	}
 	if (txt.at(txt.length() - 1) != ch)
-    	strs.push_back( txt.substr( initialPos, std::min( pos, txt.size() ) - initialPos + 1 ) );
-    return strs.size();
+		strs.push_back( txt.substr( initialPos, std::min( pos, txt.size() ) - initialPos + 1 ) );
+	return strs.size();
 }
 
 

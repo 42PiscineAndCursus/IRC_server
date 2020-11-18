@@ -332,6 +332,15 @@ void Server::receive(int socket)
 		// TODO 왜 이런 방식으로 코드를 작성하였는지 이해 못함
 		tmp->count += rec;
 	}
+	int i;
+
+	i = -1;
+	printf("message = ");
+	while (++i < rec)
+	{
+		printf(" %d ", tmp->buff[i]);
+	}
+	printf("\n");
 	if (rec == -1)
 	{
 		print(strerror(rec));
