@@ -61,6 +61,7 @@ class Server
 		void sendmsg(int socket, std::string const &str);
 		// secket에 해당하는 클라이언트에 메시지 전송
 		void sendmsg(int orig, int dest, std::string code, std::string const &str);
+		// 메시지 전송하는 함수
 		void receive(int socket);
 		// 소켓으로 부터 전송되는 메시지 수신 및 처리
 		void ssl_receive(int socket);
@@ -72,6 +73,7 @@ class Server
 		Client* getClientByUser(std::string const &user);
 		Client* getClient(std::string const &nick);
 		Channel &getChannel(std::string const &ch);
+		// 해당하는 채널을 받아옴
 		Channel &getOtherChannel(std::string const &ch);
 		void deleteClient(int socket);
 		// 소켓에 해당하는 client를 삭제함
@@ -107,6 +109,7 @@ class Server
 		void oper(Message &msg);
 		void topic(Message &msg);
 		void notice(Message &msg);
+		// notice메시지 처리하는 함수
 		void whois(Message &msg);
 		void who(Message &msg);
 		void mode(Message &msg);

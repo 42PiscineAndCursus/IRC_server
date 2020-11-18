@@ -175,7 +175,14 @@ void Server::nick(Message &msg)
 
 void Server::user(Message &msg)
 {
-	//USER <username> <hostname> <servername> <realname>
+	// RFC 2812 과 RFC 1459가 다름
+
+	// USER <username> <hostname> <servername> <realname>
+	// RFC 1459
+
+	// USER <user> <mode> <unused> <realname>
+	// RFC 2812
+
 	if (msg.orig->type != "accepted")
 		return; // RPL USERALREADYREG
 	if (msg.params.size() < 4)
@@ -183,12 +190,14 @@ void Server::user(Message &msg)
 	msg.orig->username = *msg.params.begin();
 	msg.orig->hostname = *(++msg.params.begin());
 	msg.orig->realname = *(++(++(++msg.params.begin())));
+	// 필요한 파라미터를 클라이언트에 저장
 	std::cout << msg.orig->username << std::endl;
 	std::cout << msg.orig->hostname << std::endl;
 	std::cout << msg.orig->realname << std::endl;
 	std::cout << msg.orig->nick << " -> +user" << std::endl;
 	if (msg.orig->setClient() == 0)
 		welcome(*msg.orig);
+	// 클라이언트의 타입을 변경
 }
 
 void Server::quit(Message &msg)
@@ -310,16 +319,27 @@ void Server::privmsg(Message &msg)
 
 void Server::notice(Message &msg)
 {
+	// notice메시지 처리하는 함수
+
+	// NOTICE : PRIVMSG랑 비슷하게 사용됨
+	// command : NOTICE
+	// parameters: <msgtarget> <text>
+	// PRIVMSG와의 차이점 : NOTICE메세지에 대한 응답으로써 automatic replies가 보내어지면 안됨
 	if (msg.params.size() < 1)
 		return;
+	// 파라미터가 충분하지 않은경우 함수를 종료
 	if ((int)msg.msg.find("NOTICE :Password accepted") != -1)
 	{
+		// TODO 왜 이런 코드를 작성하였는지 모르겠음
+		// 디버깅용도로 추정
 		std::string srv[] = {"SERVER ", port, " 0 0 info", "NULL"};
 		sendmsg(msg.socket, buildString(srv));
 		return;
 	}
 	if ((int)msg.msg.find("PLEASE") != -1)
 	{
+		// TODO 왜 이런 코드를 작성하였는지 모르겠음
+		// 디버깅용도로 추정
 		std::string pass[] = {
 		"PASS ", password_network, "NULL"
 		};
@@ -329,10 +349,16 @@ void Server::notice(Message &msg)
 	std::string dest = *msg.params.begin();
 	Client *tmp = getClient(dest);
 	Channel &ch = getChannel(dest);
+	// msgtarget을 통하여 channel 또는 client를 가져옴
 	if (tmp != NULL)
 	{ //PRIVATE MESSAGE
+		// 클라이언트에 notice를 보냄
+		// nick만 등록되어있는 클라이언트에게도 메시지를 보냄
+		// " NOTICE dakim0 sdfsdfsf" : user가 등록되어있지 않은경우 메시지 전송
+		// ":dakim0!dakim0@169.254.44.86 NOTICE dakim0 123123" : user가 등록되어 있는 경우 메시지 전송
 		std::string tosend = msg.orig->prefix;
 		tosend.append(" ");
+		// user로 등록되어있지 않은경우 위의 코드는 비활성화 되어야함
 		tosend.append(msg.msg);
 		sendmsg(tmp->socket, tosend);
 		return;
@@ -1226,11 +1252,17 @@ int		Server::exec(Message &msg)
 	if (msg.command == "QUIT")
 		quit(msg);
 	else if (msg.command == "NOTICE")
+	{
+		// NOTICE 처리하는 부분
 		notice(msg);
+	}
 	else if (msg.command == "SERVER")
 		server(msg);
 	else if (msg.command == "LEAKS")
+	{
+		// 메모리 릭 확인하기위하여 추가한 부분으로 추정됨
 		system("leaks ircserv");
+	}
 	else if (msg.command == "PASS")
 	{
 		// 암호 입력을 처리하는 부분
