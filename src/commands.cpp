@@ -203,17 +203,28 @@ void Server::user(Message &msg)
 
 void Server::quit(Message &msg)
 {
+	// 클라이언트와의 연결을 종료하는 함수
+
+	// command : QUIT
+	// params : quit message
+	// 클라이언트와의 연결을 종료함
+	// 서버는 에러메시지를 클라이언트에 리턴함으로써 메시지 수신을 표시함
+
 	if (msg.prefix.length() > 1 && msg.prefix != ":loop")
 	{
+		// 서버와 직접 연결되어있지 않은 클라이언트인 경우로 추정됨
 		std::string toremove = *((msg.params.begin()));
 		quitother(toremove);
+		// otherClient 및 otherChannel에서 삭제
 		return;
 	}
 	for (std::vector<Channel>::iterator it = channels.begin();
 		it != channels.end(); ++it)
 	{
+		// 클라이언트가 채널에 참석하고 있는경우
 		if ((*it).isClient(msg.orig->nick))
 		{
+			// 참석하고있는 모든 체널에 클라이언트의 연결이 끊어졌음을 전송
 			std::string words[] = {msg.orig->prefix, " ", "QUIT :", "NULL"};
 			(*it).eraseClient(msg.orig->nick);
 			tochannel((*it).name, buildString(words), msg.orig->socket);
@@ -222,17 +233,24 @@ void Server::quit(Message &msg)
 
 	std::string str[] = {"Error: Closing link: ", msg.orig->ip, " (Client quit)", "NULL"};
 	sendmsg(msg.orig->socket, buildString(str));
+	// 크라이언트에게 에러메시지를 리턴함
 	std::string fwd[] = {
 		":", ip, " QUIT ", msg.orig->nick
 		,"NULL"
 	};
 	forward(buildString(fwd));
+	// 클라이언트와의 연결이 끊어졌음을 현재의 서버와 연결된 서버에 전송
 	close(msg.orig->socket);
 	FD_CLR(msg.orig->socket, &master);
+	// 클라이언트에 해당하는 파일디스크립터를 삭제
 
 	delete msg.orig;
+	// 동적할당받은 클라이언트 삭제
 	if (msg.prefix.length() < 2)
+	{
+		// pass user nick설정을 하지 않은 클라이언트인것 같음
 		clients.erase(std::find(clients.begin(), clients.end(), msg.orig));
+	}
 }
 
 void Server::privmsg(Message &msg)
@@ -1276,7 +1294,10 @@ int		Server::exec(Message &msg)
 {
 	// 프로토콜에 맞추어 메시지를 처리하는 함수
 	if (msg.command == "QUIT")
+	{
+		// QUIT을 처리하는 부분
 		quit(msg);
+	}
 	else if (msg.command == "NOTICE")
 	{
 		// NOTICE 처리하는 부분

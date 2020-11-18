@@ -707,6 +707,7 @@ void Server::sendchannels(Message &msg)
 
 void Server::partother(std::string const &nick)
 {
+	// otherChannels에서 클라이언트를 삭제
 	for (std::vector<Channel>::iterator it = otherchannels.begin();
 		it!= otherchannels.end(); ++it)
 	{
@@ -719,6 +720,8 @@ void Server::quitother(std::string const &nick)
 	for (std::vector<std::string>::iterator it = otherclients.begin();
 		it != otherclients.end(); ++it)
 	{
+		// 서버와 직접 연결되어있지 않은 클라이언트중 해당하는 닉이 있는경우
+		// 해당하는 닉을 삭제
 		if (*it == nick)
 		{
 			otherclients.erase(it);
@@ -726,6 +729,7 @@ void Server::quitother(std::string const &nick)
 		}
 	}
 	partother(nick);
+	// other채널에서 클라이언트를 삭제
 }
 
 bool Server::isServer(std::string const &nick)
