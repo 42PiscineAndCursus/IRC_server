@@ -70,6 +70,7 @@ class Server
 		Client* getClient(int socket);
 		// socket에 해당하는 클라이언트를 받아옴
 		std::string getOtherClient(std::string const &nick);
+		// 서버에 직접 연결되어있지 않은 클라이언트에 대한 클라이언트 정보를 받아오는 함수
 		Client* getClientByUser(std::string const &user);
 		Client* getClient(std::string const &nick);
 		Channel &getChannel(std::string const &ch);
@@ -87,6 +88,9 @@ class Server
 		bool isServer(std::string const &nick);
 
 		std::vector<Channel>::iterator exists(std::string &channel);
+		// 해당하는 채널이 있는지 체크하는 함수
+		// 찾은경우 해당하는 이터레이터 리턴
+		// 찾지 못한경우 end()리턴
 
 		void quit(Message &msg);
 		void pass(Message &msg);
@@ -134,8 +138,10 @@ class Server
 		void newjoin(Message &msg);
 
 		void forward(std::string const &str);
+		// server와 연결된 클라이언트중 server또는 preserver인 클라이언트에 모두 메시지를 보냄
 		void broadcast(std::string const &orig, std::string const &rpl, std::string const &msg);
 		void tochannel(std::string const& channel, std::string const &msg, int orig);
+		// 채널에 참석하고있는 모두에게 메시지 전송
 		void tochannel(Channel &ch, Message &msg);
 		void not_params(Message &msg);
 		void no_such_channel(Message &msg);

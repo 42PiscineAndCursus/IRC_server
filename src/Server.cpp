@@ -332,15 +332,6 @@ void Server::receive(int socket)
 		// TODO 왜 이런 방식으로 코드를 작성하였는지 이해 못함
 		tmp->count += rec;
 	}
-	int i;
-
-	i = -1;
-	printf("message = ");
-	while (++i < rec)
-	{
-		printf(" %d ", tmp->buff[i]);
-	}
-	printf("\n");
 	if (rec == -1)
 	{
 		print(strerror(rec));
@@ -469,6 +460,7 @@ std::vector<Channel>::iterator Server::exists(std::string &channel)
 
 void Server::forward(std::string const &str)
 {
+	// server와 연결된 클라이언트중 server또는 preserver인 클라이언트에 모두 메시지를 보냄
 	for (std::vector<Client*>::iterator it = clients.begin();
 		it != clients.end(); ++it)
 	{
@@ -496,6 +488,7 @@ void Server::broadcast(
 
 void Server::tochannel(std::string const &channel, std::string const &msg, int orig)
 {
+	// 채널에 참석하고있는 모두에게 메시지 전송
 	Channel c = getChannel(channel);
 	if (c.name.length() > 0)
 	{

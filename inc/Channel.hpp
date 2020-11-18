@@ -32,6 +32,7 @@ class Channel
 		void	eraseBanned(const std::string &nick);
 
 		bool	isClient(const std::string &nick);
+		// 채널에서 해당하는 닉을 찾으면 1리턴 찾지 못하면 0리턴
 		bool	isBanned(const std::string &nick);
 
 		const std::string get_permissions(const std::string &nick);

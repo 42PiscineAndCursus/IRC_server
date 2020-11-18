@@ -48,6 +48,7 @@ Client* Server::getClient(std::string const &nick)
 
 std::string Server::getOtherClient(std::string const &nick)
 {
+	// 서버에 직접연결되어있지 않은 클라이언트 찾는 함수
 	for (std::vector<std::string>::iterator it = otherclients.begin(); it != otherclients.end();
 		it++)
 	{
@@ -208,29 +209,29 @@ void Server::quit(Message &msg)
 		quitother(toremove);
 		return;
 	}
-    for (std::vector<Channel>::iterator it = channels.begin();
-        it != channels.end(); ++it)
-    {
-        if ((*it).isClient(msg.orig->nick))
-        {
-            std::string words[] = {msg.orig->prefix, " ", "QUIT :", "NULL"};
-            (*it).eraseClient(msg.orig->nick);
-            tochannel((*it).name, buildString(words), msg.orig->socket);
-        }
-    }
+	for (std::vector<Channel>::iterator it = channels.begin();
+		it != channels.end(); ++it)
+	{
+		if ((*it).isClient(msg.orig->nick))
+		{
+			std::string words[] = {msg.orig->prefix, " ", "QUIT :", "NULL"};
+			(*it).eraseClient(msg.orig->nick);
+			tochannel((*it).name, buildString(words), msg.orig->socket);
+		}
+	}
 
-    std::string str[] = {"Error: Closing link: ", msg.orig->ip, " (Client quit)", "NULL"};
-    sendmsg(msg.orig->socket, buildString(str));
+	std::string str[] = {"Error: Closing link: ", msg.orig->ip, " (Client quit)", "NULL"};
+	sendmsg(msg.orig->socket, buildString(str));
 	std::string fwd[] = {
 		":", ip, " QUIT ", msg.orig->nick
 		,"NULL"
 	};
 	forward(buildString(fwd));
-    close(msg.orig->socket);
-    FD_CLR(msg.orig->socket, &master);
+	close(msg.orig->socket);
+	FD_CLR(msg.orig->socket, &master);
 
-    delete msg.orig;
-    if (msg.prefix.length() < 2)
+	delete msg.orig;
+	if (msg.prefix.length() < 2)
 		clients.erase(std::find(clients.begin(), clients.end(), msg.orig));
 }
 
@@ -330,16 +331,16 @@ void Server::notice(Message &msg)
 	// 파라미터가 충분하지 않은경우 함수를 종료
 	if ((int)msg.msg.find("NOTICE :Password accepted") != -1)
 	{
-		// TODO 왜 이런 코드를 작성하였는지 모르겠음
-		// 디버깅용도로 추정
+		// 상대방 서버의 비밀번호 입력을 성공하였을 때 작동
 		std::string srv[] = {"SERVER ", port, " 0 0 info", "NULL"};
 		sendmsg(msg.socket, buildString(srv));
 		return;
 	}
 	if ((int)msg.msg.find("PLEASE") != -1)
 	{
-		// TODO 왜 이런 코드를 작성하였는지 모르겠음
-		// 디버깅용도로 추정
+		// 서버간의 연겨에서 사용함
+		// 서버에 접속하게 되면 상대방 서버에서 "NOTICE * : PLEASE LOG IN"를 보내게 됨
+		// 상대방 서버에 접속하기위해 비밀번호를 입력함
 		std::string pass[] = {
 		"PASS ", password_network, "NULL"
 		};
@@ -365,14 +366,21 @@ void Server::notice(Message &msg)
 	}
 	else if (exists(dest) != channels.end())
 	{ //CHANNEL MESSAGE
+		// exists는 채널들이 들어가있는 벡터에서 dest와 일치하는 값을 찾아 리턴함
+		// 채널을 찾은경우
 		if (msg.orig->type == "server" || ch.isClient(msg.orig->nick))
 		{
+			// 서버로부터 온 메시지인경우 또는
+			// 메시지를 보낸 사람이 해당하는 채널에 참석하고 있는경우
+			// 메시지 전송
 			std::string arr[] = {
 			msg.orig->prefix, " ", msg.msg, "NULL"};
 			tochannel(ch.name, buildString(arr), msg.orig->socket);
+			// 채널에 참석하고있는 모두에게 메시지 전송함
 		}
 		else
 		{ //not in channel
+			// 메시지를 보낸 사람이 해당하는 채널에 참석하고 있지 않은경우
 			std::string arr[] = {
 				":", ip, " ", ERR_CANNOTSENDTOCHAN, " ", msg.orig->nick, " ",
 				ch.name, " :Cannot send to nick/channel.", "NULL"
@@ -387,20 +395,35 @@ void Server::notice(Message &msg)
 			{
 				if (msg.orig->type == "server")
 					return;
+				// 메시지가 서버로부터 온경우는 무시함
 				std::string rpl[] = { msg.orig->prefix, " ", msg.msg, "NULL"};
 				forward(buildString(rpl));
+				// server와 연결된 클라이언트중 server또는 preserver인 클라이언트에 모두 메시지를 보냄
 				return;
 			}
 		}
+		// server의 경우 멤버 변수로 channels 벡터와 otherchannels 벡터 두가지를 가지고있음
+		// 위의 getChannel은 channels에서 채널을 찾는것임
+		// 채널에 참석하고있는 유저중 현재의 서버와 연결이 되어있는 경우는 channels에서 관리하는것으로 추정됨
+		// 채널에 참석하고있는 유저중 현재의 서버와 연결이 되어있지 않은경우를 처리하기위해 otherchannels로 관리하는것 같음
+		// 따라서 notice가 server에서 온 경우는 무시하는것 같음
+
+		// TODO 서버 a b c가 각각 a-b-c로 연결되어있는경우
+		// TODO 즉 서버 a와 c가 직접적으로 연결되어있지 않은경우
+		// TODO a서버와 연결되어있는 유저 A c서버와 연결되어있는 유저 C가 있다고 가정할 때
+		// TODO A와 C가 같은 채널에 있는경우 A가 notice를 채널에 전송하면 그 notice는 서버 c에 전송되는가?
+
 		if (ch.name.length() > 2)
-		{//CANAL EXISTE EN OTRO SERVIDOR
+		{//CANAL EXISTE EN OTRO SERVIDOR -> 채널이 다른 서버에 있는경우로 번역됨
 			if (msg.orig->type == "server")
 				return;
+			// 메시지가 서버로부터 온 경우는 무시함
 			std::string rpl[] = { msg.orig->prefix, " ", msg.msg, "NULL"};
 			forward(buildString(rpl));
 			return;
 		}
 		else {
+			// 채널을 찾을 수 없는 경우
 			std::string words[] = {":", ip, " ", ERR_NOSUCHNICK, " ", msg.orig->nick, \
 			" ", dest, " :No such nick/channel", "NULL"};
 			sendmsg(msg.socket, buildString(words));
@@ -409,9 +432,11 @@ void Server::notice(Message &msg)
 	}
 	if (msg.msg.length() > 8)
 	{
+		// 서버가 직접적으로 연결되어있지 않은 클라이언트 처리
+		// 클라이언트를 찾지 못하면 ""를 리턴함
 		std::string other = getOtherClient(dest);
 		if (other != "")
-		{//USUARIO EXISTE EN OTRO SERVER
+		{//USUARIO EXISTE EN OTRO SERVER -> 사용자가 다른 서버에 있는경우로 번역됨
 			if (msg.orig->type == "server")
 				return;
 			std::string rpl[] = { msg.orig->prefix, " ", msg.msg, "NULL"};
@@ -421,6 +446,7 @@ void Server::notice(Message &msg)
 		std::string words[] = {":", ip, " ", ERR_NOSUCHNICK, " ", msg.orig->nick, \
 		" ", dest, " :No such nick/channel", "NULL"};
 		sendmsg(msg.socket, buildString(words));
+		// 서버와 직접 연결되어있지 않은 클라이언트에서 찾지 못한경우
 	}
 }
 
@@ -750,38 +776,38 @@ void Server::topic(Message &msg)
 
 void Server::kick(Message &msg)
 {
-    if (msg.params.size() < 1)
-    {
-        not_params(msg);
-        return;
-    }
-    if (exists(*msg.params.begin()) == this->channels.end())
-    {
+	if (msg.params.size() < 1)
+	{
+		not_params(msg);
+		return;
+	}
+	if (exists(*msg.params.begin()) == this->channels.end())
+	{
 		no_such_channel(msg);
 		return;
-    }
-    Channel &tmp = *exists(*msg.params.begin());
-    std::string expulsed = *(++msg.params.begin());
-    if (getClient(expulsed) == NULL)
-        no_such_nick_channel(msg);
-    else if (!(tmp.isClient(msg.orig->nick)))
-        not_in_channel(msg);
-    else if (!(tmp.isClient(expulsed)))
-    {
-        std::string rpl[] = {msg.orig->prefix, " ", ERR_USERNOTINCHANNEL, " ", msg.orig->nick, \
-        " ", expulsed, " ", tmp.name, ":They aren't on that channel", "NULL"};
-        sendmsg(msg.orig->socket, buildString(rpl));
-    }
-    else if ((int)tmp.get_permissions(msg.orig->nick).find("+o") != -1)
-    {
-        std::string words[] = {msg.orig->prefix, " KICK ", tmp.name, " ", \
-        expulsed, ": ", expulsed, "NULL"};
-        tochannel(tmp.name, buildString(words), msg.orig->socket);
-        sendmsg(msg.orig->socket, buildString(words));
+	}
+	Channel &tmp = *exists(*msg.params.begin());
+	std::string expulsed = *(++msg.params.begin());
+	if (getClient(expulsed) == NULL)
+		no_such_nick_channel(msg);
+	else if (!(tmp.isClient(msg.orig->nick)))
+		not_in_channel(msg);
+	else if (!(tmp.isClient(expulsed)))
+	{
+		std::string rpl[] = {msg.orig->prefix, " ", ERR_USERNOTINCHANNEL, " ", msg.orig->nick, \
+		" ", expulsed, " ", tmp.name, ":They aren't on that channel", "NULL"};
+		sendmsg(msg.orig->socket, buildString(rpl));
+	}
+	else if ((int)tmp.get_permissions(msg.orig->nick).find("+o") != -1)
+	{
+		std::string words[] = {msg.orig->prefix, " KICK ", tmp.name, " ", \
+		expulsed, ": ", expulsed, "NULL"};
+		tochannel(tmp.name, buildString(words), msg.orig->socket);
+		sendmsg(msg.orig->socket, buildString(words));
 		tmp.eraseClient(expulsed);
-    }
-    else
-        not_operator(msg);
+	}
+	else
+		not_operator(msg);
 }
 
 void Server::oper(Message &msg)
