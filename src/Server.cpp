@@ -594,27 +594,33 @@ void Server::unknown_command(Message &msg)
 
 void Server::welcome(const Client &cli)
 {
+	// 유저 등록이 성공한 경우 처리
 	std::string newuser("NEWUSER ");
 	newuser.append(cli.nick);
 	forward(newuser);
+	// 새로운 유저 등록을 연결된 다른 서버에 전송
 	std::string words[] = {":", ip, " ", RPL_WELCOME, " ", cli.nick, \
 	" :Welcome to our ft_IRC from asegovia and darodrig ", cli.nick, "NULL"};
-	sendmsg(cli.socket, buildString(words));
+	// sendmsg(cli.socket, buildString(words));
 	std::string words2[] = {":", ip, " ", RPL_YOURHOST, " ", cli.nick, \
 	" :Your host is ", host, "[", ip, "/", port, "], running version ft_irc-0.5", "NULL"};
-	sendmsg(cli.socket, buildString(words2));
+	// sendmsg(cli.socket, buildString(words2));
 	std::string words3[] = {":", ip, " ", RPL_CREATED, " ", cli.nick, \
 	" :This server was created Mon Nov 4 2019 at 09:00:00 UTC + 1", "NULL"};
-	sendmsg(cli.socket, buildString(words3));
+	// sendmsg(cli.socket, buildString(words3));
 	std::string words4[] = {":", ip, " ", RPL_MYINFO, " ", cli.nick, \
 	" ft_irc-0.5 ", "NULL"}; //Aqui van los posibles modos de usuario.
-	sendmsg(cli.socket, buildString(words4));
+	// sendmsg(cli.socket, buildString(words4));
 	std::string words5[] = {":", ip, " ", "005", " ", cli.nick, \
 	" CHARSET=ascii", "NULL"}; //Aqui van otras cosas soportadas, longitud maxima de nick...
-	sendmsg(cli.socket, buildString(words5));
+	// sendmsg(cli.socket, buildString(words5));
+	// 새로 등록된 클라이언트에 메시지 전송
 	Client *cll = getClient(cli.nick);
+	// 클라이언트 생성
 	lusers(cll);
+	// 현재 서버와 연결하고 있는 클라이언트의 상태를 알려줌
 	motd(cll);
+	// motd전송
 }
 
 void Server::sendusers(Message &msg)

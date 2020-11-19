@@ -192,12 +192,15 @@ void Server::user(Message &msg)
 	msg.orig->hostname = *(++msg.params.begin());
 	msg.orig->realname = *(++(++(++msg.params.begin())));
 	// 필요한 파라미터를 클라이언트에 저장
+	// realname의 경우 공백을 허용하기 때문에
+	// 위의 방식대로 realname을 저장하게 되면 "dakim the great"과 같은 경우를 처리하지 못함
 	std::cout << msg.orig->username << std::endl;
 	std::cout << msg.orig->hostname << std::endl;
 	std::cout << msg.orig->realname << std::endl;
 	std::cout << msg.orig->nick << " -> +user" << std::endl;
 	if (msg.orig->setClient() == 0)
 		welcome(*msg.orig);
+		std::cout << "in" << std::endl;
 	// 클라이언트의 타입을 변경
 }
 
@@ -255,6 +258,26 @@ void Server::quit(Message &msg)
 
 void Server::privmsg(Message &msg)
 {
+	// PRIVMSG 처리하는 함수
+
+	// command : PRIVMSG => 유저들간의 프라이빗 메시지 전송을 위해서 사용됨. / 채널에 메시지를 보내기위해 사용되기도 함
+	// parameters: <msgtarget> <text to be sent>
+	// <msgtarget> : 메시지 수령인의 닉네임 또는 채널명
+	// => 메시지 타켓에 호스트 마스크(#<mask>) 또는 서버 마스크($<mask>) 들어갈 수도 있음
+	// => 이경우 서버는 마스크와 맞는 다른 서버에 메시지를 전송함
+	// => 마스크에는 적어도 한개 이상의 '.'이 들어가야하며 마지막 '.'이후에는 와일드카드('*'|'?')가 들어갈 수 없음
+	// => 이는 PRIVMSG를 통해 모든 유저에세 broadcast하는것을 방지하기 위함($* #*)
+
+	// numeric replies : ERR_NORECIPIENT, ERR_NOTEXTTOSEND, ERR_CANNOTSENDTOCHAN, ERR_NOTOPLEVEL, ERR_WILDTOPLEVEL, ERR_TOOMANYTARGETS, ERR_NOSUCHNICK, RPL_AWAY
+	// ERR_NORECIPIENT : ":No recipient given (<command>)" / 존재하지 않은 메시지 타겟을 설정한 경우로 추측
+	// ERR_NOTEXTTOSEND : ":No text to send"
+	// ERR_CANNOTSENDTOCHAN : "<channel name> :Cannot send to channel" / 모드 +n인경우에 채널에 없거나, mode +m이 설정된 채널의 채널오퍼레이터(chanop)(또는 mode +v)가 아닌경우에 유저에게 메시지를 보내는 경우 / 또는 밴 당한 유저가 채널에 프라이빗 메시지를 보내려는 경우
+	// ERR_NOTOPLEVEL : "<mask> :No toplevel domain specified"
+	// ERR_WILDTOPLEVEL : "<mask> :Wildcard in toplevel domain"
+	// ERR_TOOMANYTARGETS : "<target> :<error code> recipients. <abort message>" / user@host 포멧으로 privmsg/notice를 보내려 시도하였고, user@host이 여러개인경우 / 많은 상대에게 PRIVMSG를 보내려는 경우 / join command도 사용함
+	// ERR_NOSUCHNICK :  "<nickname> :No such nick/channel" / 현재는 사용하지 않는 닉을 사용한 경우
+	// RPL_AWAY : "<nick> :<away message>"
+
 	if (msg.params.size() < 1)
 	{
 		std::string arr[] = {
@@ -264,6 +287,7 @@ void Server::privmsg(Message &msg)
 		sendmsg(msg.orig->socket, buildString(arr));
 		return;
 	}
+	// 이 아래의 코드는 notice와 같음
 	std::string dest = *msg.params.begin();
 	Client *tmp = getClient(dest);
 	Channel &ch = getChannel(dest);
@@ -643,6 +667,18 @@ void	Server::server(Message &msg)
 
 void	Server::lusers(Client *cli)
 {
+	// Command: LUSERS : irc네트워크의 사이즈에 대한 통계를 얻는 메시지
+	// Parameters: [ <mask> [ <target> ] ] : 파라미터가 없는경우 전체 네트워크에 대한 정보 리턴 / 마스크가 있는경우 마스크에 해당하는 서버들의 정보 리턴 / 타겟이 명시되어있는경우 LUSERS요청은 해당하는 서버에 전달됨 / 타겟에 와일드카드 사용가능
+	// Numeric Replies
+	// RPL_LUSERCLIENT : ":There are <integer> users and <integer> services on <integer> servers"
+	// RPL_LUSEROP :  "<integer> :operator(s) online"
+	// RPL_LUSERUNKOWN : 문서에 나와있지 않음 RPL_LUSERUNKNOWN 의 경우는 나와있음  / RPL_LUSERUNKNOWN : "<integer> :unknown connection(s)"
+	// RPL_LUSERCHANNELS : "<integer> :channels formed"
+	// RPL_LUSERME :  ":I have <integer> clients and <integer> servers"
+	// ERR_NOSUCHSERVER : "<server name> :No such server" / 서버를 찾을 수 없는 경우
+
+
+	// 현재 서버와 연결되어있는 클라이언트들의 상태를 알려줌
 	int users = 0, clients = 0, oper = 0, servers = 1, unknown = 0;
 	int invisible = 0;
 
@@ -665,6 +701,7 @@ void	Server::lusers(Client *cli)
 		else
 			++servers;
 	}
+	// 현재 서버와 연결하고 있는 클라이언트들의 정보를 가져옴
 	std::string lusers1[] = {":", ip, " ", RPL_LUSERCLIENT, " ", cli->nick,\
 		" :", ft_itoa(users), " users and ", ft_itoa(invisible), \
 		" invisible on ", ft_itoa(servers), " server(s)", "NULL"};
@@ -681,6 +718,7 @@ void	Server::lusers(Client *cli)
 	std::string lusers5[] = {":", ip, " ", RPL_LUSERME, " ", cli->nick,\
 		" :I have ", ft_itoa(clients), " clients and 1 server", "NULL"};
 	sendmsg(cli->socket, buildString(lusers5));
+	// 현재 서버와 연결하고 있는 클라이언트들의 정보를 알려줌
 }
 
 void Server::ping(Message &msg)
@@ -706,6 +744,16 @@ void Server::ping(Message &msg)
 
 void Server::motd(Client *orig)
 {
+	// motd(Message Of The Day)메시지 처리
+	// Command: MOTD : 명시된 서버의 messge of the day 처리 / 생략되어있는 경우 현재의 서버의 message of day처리
+	// Parameters: [ <target> ] // target에 와일드 카드 사용 가능
+	// Numeric Replies
+	// RPL_MOTDSTART : ":- <server> Message of the day - "
+	// RPL_MOTD : ":- <text>"
+	// RPL_ENDOFMOTD : ":End of MOTD command"
+	// ERR_NOMOTD : ":MOTD File is missing"
+		// user로 등록되어있지 않으면 의미가 없음
+
 	std::string begin[] = {
 		":", ip, " ", RPL_MOTDSTART, " ", orig->nick,
 		" -ft_irc Message of the Day - ", "NULL"
@@ -730,6 +778,7 @@ void Server::motd(Client *orig)
 		" :End of /MOTD command.", "NULL"
 	};
 	sendmsg(orig->socket, buildString(endmotd));
+	// 메시지 출력부
 }
 
 void	Server::list(Message &msg)
@@ -1304,10 +1353,13 @@ int		Server::exec(Message &msg)
 		notice(msg);
 	}
 	else if (msg.command == "SERVER")
+	{
 		server(msg);
+	}
 	else if (msg.command == "LEAKS")
 	{
 		// 메모리 릭 확인하기위하여 추가한 부분으로 추정됨
+		// 원래 system함수 사용하면 안됨
 		system("leaks ircserv");
 	}
 	else if (msg.command == "PASS")
@@ -1342,11 +1394,18 @@ int		Server::exec(Message &msg)
 	else if (msg.command == "TOPIC")
 		topic(msg);
 	else if (msg.command == "LUSERS")
+	{
+		// 서버와 연결되어있는 클라이언트에 대한 정보를 전송하는 함수
+		// LUSERS처리 함수
 		lusers(msg.orig);
+	}
 	else if (msg.command == "JOIN")
 		join(msg);
 	else if (msg.command == "PRIVMSG")
+	{
+		// PRIVMSG처리하는 부분
 		privmsg(msg);
+	}
 	else if (msg.command == "PART")
 		part(msg);
 	else if (msg.command == "PING")
@@ -1354,7 +1413,10 @@ int		Server::exec(Message &msg)
 	else if (msg.command == "PONG")
 		(void)msg;
 	else if (msg.command == "MOTD")
+	{
+		// motd(Message Of The Day)메시지 처리
 		motd(msg.orig);
+	}
 	else if (msg.command == "WHOIS")
 		whois(msg);
 	else if (msg.command == "WHO")

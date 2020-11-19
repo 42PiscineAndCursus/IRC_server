@@ -80,7 +80,9 @@ class Server
 		// 소켓에 해당하는 client를 삭제함
 		void sendjoin(const std::string &name, const std::string &nick);
 		void quitother(std::string const &nick);
+		// otherClient에서 클라이언트 삭제
 		void partother(std::string const &nick);
+		// otherChannels에서 클라이언트 삭제
 
 		bool isvalid(Message &msg);
 		int exec(Message &msg);
@@ -93,6 +95,7 @@ class Server
 		// 찾지 못한경우 end()리턴
 
 		void quit(Message &msg);
+		// 클라이언트와의 연결을 종료하는 함수
 		void pass(Message &msg);
 		// pass메시지 처리하는 함수
 		void nick(Message &msg);
@@ -101,15 +104,18 @@ class Server
 		void user(Message &msg);
 		// user등록하는 함수
 		void privmsg(Message &msg);
+		// PRIVMSG처리하는 함수
 		void join(Message &msg);
 		void part(Message &msg);
 		void lusers(Client *cli);
+		// 현재 서버와 연결하고 있는 클라이언트의 상태를 알려줌
 		void server(Message &msg);
 		void kick(Message &msg);
 		void ping(Message &msg);
 		void pong(Message &msg);
 		void list(Message &msg);
 		void motd(Client *cli);
+		// motd(Message Of The Day)메시지 처리
 		void oper(Message &msg);
 		void topic(Message &msg);
 		void notice(Message &msg);
@@ -151,6 +157,7 @@ class Server
 		void no_such_nick_channel(Message &msg);
 		void unknown_command(Message &msg);
 		void welcome(const Client &cli);
+		// 유저 등록이 끝난경우 처리 / 연결된 다른 서버에 전송 /
 };
 
 # endif
