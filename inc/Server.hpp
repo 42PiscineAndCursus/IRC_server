@@ -110,6 +110,7 @@ class Server
 		void lusers(Client *cli);
 		// 현재 서버와 연결하고 있는 클라이언트의 상태를 알려줌
 		void server(Message &msg);
+		// server메시지 처리하는 함수
 		void kick(Message &msg);
 		void ping(Message &msg);
 		void pong(Message &msg);

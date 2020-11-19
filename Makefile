@@ -6,10 +6,10 @@ SRC =	src/main.cpp src/Server.cpp src/libft.cpp src/utils.cpp src/Client.cpp \
 INC =	inc/ft_irc.hpp inc/Server.hpp inc/reply.hpp inc/Client.hpp \
 		inc/Message.hpp inc/Channel.hpp
 
-SSL = -L/Users/${USER}/.brew/Cellar/openssl@1.1/1.1.1h/lib -lssl -lcrypto
-# SSL = -L /usr/local/Cellar/openssl@1.1/1.1.1h/lib -lssl -lcrypto
-SSLI = -I/Users/${USER}/.brew/Cellar/openssl@1.1/1.1.1h/include
-# SSLI = -I /usr/local/Cellar/openssl@1.1/1.1.1h/include
+# SSL = -L/Users/${USER}/.brew/Cellar/openssl@1.1/1.1.1h/lib -lssl -lcrypto
+SSL = -L /usr/local/Cellar/openssl@1.1/1.1.1h/lib -lssl -lcrypto
+# SSLI = -I/Users/${USER}/.brew/Cellar/openssl@1.1/1.1.1h/include
+SSLI = -I /usr/local/Cellar/openssl@1.1/1.1.1h/include
 
 COMPILER = clang++
 $(NAME): $(SRC) $(INC)

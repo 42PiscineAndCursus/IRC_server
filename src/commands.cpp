@@ -622,8 +622,27 @@ void	Server::part(Message &msg)
 
 void	Server::server(Message &msg)
 {
+	// server메시지 처리하는 부분
+	// Command: SERVER : 새로운 서버를 등록하는경우 사용 / 전체 네트워크에 새로운 연결이 서버라는것을 알려주기위해 사용 / 새로운 서버가 네트워크에 연결되는경우 이 메시지에대한 정보가 전체 네트워크에 방송되어야함
+	// Parameters: <servername> <hopcount> <token> <info>
+
+	// hopcount : 각각의 서버에서 얼마만큼 떨어져있는지에 대한 정보 / local peer = 0 / 해당하는 서버와 연결하기위해 다른 서버를 하나씩 거칠 때마다 카운트가 올라감 / 따라서 네트워크에 연결되어있는 모든 서버에대한 목록이 있는경우 전체 서버트리를 그릴 수 있음 / 하지만 일반적인 경우 호스트 마스크가 막아줌
+	// token : 각각의 서버를 구분하기위해 사용 / unsigned number임 / 이 토큰은 이후 서버간의 NICK 또는 SERVICE 메시지 교환에서 서버를 참조 할 때 사용함/ 토큰은 point-to-point(p2p)연결에서만 의미가 있음 / 전역으로 사용될 수 없음
+
+	// 서버로써 등록을 하지 않았거나, 서버로써 등록을 하려는 경우 또는 이미 존재하는 연결을 이용하여 다른 서버에 보내는 경우 즉 기존에 연결된 서버 너머의 새로운 서버에 정보를 전달하려는 경우에 사용됨
+	// 타겟에 해당하는 서버와의 연결을 끊는것에대한 결과로써 SERVER 메시지를 받는경우 대부분의 에러가 발생함 / 이러한 상황의 엄격함 때문에, 에러를 numeric replie로 보내기 보다 "ERROR"로 보내기 때문 // TODO 뭔말?
+	// If a SERVER message is parsed and it attempts to introduce a server which is already known to the receiving server, the connection, from which that message arrived, MUST be closed (following the correct procedures), since a duplicate route to a server has been formed and the acyclic nature of the IRC tree breaks.
+	// => 두 서버간 2개의 연결을 만들어 순환적인 구조 즉 비순환적 트리구조를 만들지 말도록 해야함
+	// => 이미 연결되어있는 서버에서 메시지를 받은경우 해당하는 연결을 끊어야함
+	// => 특정한 조건하에서 끊어져야할 연결이 아닌 기존의 연결이 끊어질수도 있음
+	// => 이경우는 프로토콜에 의해 고쳐질 수 없음 / 인간의 중재가 필요함
+
+	std::cout << std::endl << "SERVER MESSGE !!!" << std::endl << std::endl;
 	if (msg.params.size() < 4)
+	{
+		// 파라미터가 충분하지 않은경우
 		not_params(msg);
+	}
 	else
 	{
 		Client *tmp = getClient(msg.orig->socket);
@@ -632,19 +651,28 @@ void	Server::server(Message &msg)
 		while (it != msg.params.end())
 		{
 			if (i == 0)
+			{
+				// <servername>저장
 				tmp->servername = *it;
+			}
 			if (i == 1)
+			{
+				// <hopcount>저장
 				tmp->hopcount = ft_atoi((*it).c_str());
+			}
 			if (i == 2)
 			{
 				if ((tmp->token = *it) == "0")
 				{
+					// 토큰이 0인경우 preserver로 추정됨
 					tmp->type = "preserver";
 					std::string srvrply[] = {
 						"SERVER ft_irc_main 1 1 ",
 						" no_info", "NULL" };
 					sendmsg(tmp->socket, buildString(srvrply));
 				}
+				// else if (tmp->token == "1")
+				// 이렇게 해도 됨
 				else if ((tmp->token = *it) == "1")
 				{
 					std::string srvrply[] = {
@@ -654,6 +682,8 @@ void	Server::server(Message &msg)
 			}
 			if (i > 2)
 			{
+				// <info>의 경우 공백을 포함할 수 있으므로
+				// 이후의 파라미터값을 합쳐 <info>에 저장
 				tmp->information.append(*it);
 				if (it != (--msg.params.end()))
 					tmp->information.append(" ");
@@ -1354,6 +1384,7 @@ int		Server::exec(Message &msg)
 	}
 	else if (msg.command == "SERVER")
 	{
+		// SERVER메시지 처리하느 부분
 		server(msg);
 	}
 	else if (msg.command == "LEAKS")
