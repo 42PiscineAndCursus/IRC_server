@@ -96,6 +96,9 @@ void Server::init_server()
 	}
 	this->ip = getIp();
 	// getIp = IPADDRESS를 리턴하는 함수
+	// ip의 값은 여기서 설정이 되고 바뀌지 않는것으로 보임
+	// 그렇다면 생성자에서 초기화를 하거나, 매크로로 설정을 하지 않은것일까?
+	// 왜 여기서 설정을 해야하는거지?
 	for (p = ai; p != NULL; p = p->ai_next)
 	{
 		// 왜 반복문을 돌리는걸까?
@@ -153,8 +156,8 @@ void Server::serv_connect()
 
 	ft_memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_flags = AI_PASSIVE;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags = AI_PASSIVE;
 	if ((rv = getaddrinfo(this->host.c_str(), this->port_network.c_str(), &hints, &ai)) != 0)
 		ft_perror(strerror(rv));
 	for (p = ai; p != NULL; p = p->ai_next)
@@ -162,24 +165,31 @@ void Server::serv_connect()
 		sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
 		if (sockfd < 0)
 			continue;
-		if (::connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
-            close(sockfd);
-            ft_perror("Server to server: could not connect");
-            continue;
-        }
+		if (::connect(sockfd, p->ai_addr, p->ai_addrlen) == -1)
+		{
+			// 서버에 연결을 요청
+			// connect(파일디스크립터, 주소, 길이)
+			close(sockfd);
+			ft_perror("Server to server: could not connect");
+			continue;
+		}
 		break;
 	}
 	if (p == NULL)
         ft_perror("failed to connect\n");
 	fcntl(sockfd, F_SETFL, O_NONBLOCK);
+	// 파일디스크립터 설정을 변경함
 	FD_SET(sockfd, &master);
+	// 파일디스크립터 그룹화
 	if (sockfd > fdmax)
 		fdmax = sockfd;
+	// fdmax 업데이트
 	Client *tmp = new Client(sockfd);
 	tmp->setIP(host);
 	tmp->hopcount = 1;
 	tmp->type = "server";
 	clients.push_back(tmp);
+	// 클라이언트 설정
 }
 
 
@@ -194,7 +204,6 @@ void Server::main_loop()
 		while(42)
 		{
 			serv_select();
-			std::cout << "fdmax = " << fdmax << std::endl;
 			for (int i = 0; i <= fdmax; ++i)
 			{
 				// 파일디스크립터에 변화가 생긴경우

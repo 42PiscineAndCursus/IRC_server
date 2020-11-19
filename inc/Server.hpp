@@ -52,7 +52,7 @@ class Server
 		void serv_connect();
 		void server_login();
 		void init_server();
-		//
+		// 외부의 접속을 관리하는 파일디스크립터 설정하는 함수
 		void ssl_init();
 		void main_loop();
 		// 서버와의 통신을 수신하는 함수
