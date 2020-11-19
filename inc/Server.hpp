@@ -16,7 +16,9 @@ class Server
 		std::string port;
 		std::string password;
 		std::string msgofday;
+		// "HELLO_MADRID"이 저장되고, 사용도 변경되 안됨
 		std::string creationtime;
+		// "02/09/2019 09:00:00 GMT+1"이 값이 저장되고 변경되지 않음 한번 사용됨
 		std::string ip;
 
 		std::vector<Client*> clients;
@@ -27,8 +29,11 @@ class Server
 		SSL_CTX	*ctx;
 		SSL *ssl;
 
+		// 파일디스크립터의 인풋에관한 그룹 관련 변수
 		fd_set	master;
+		// 사실상 쓸모없는 값임
 		fd_set	read_fds;
+		// 외부와의 연결을 담당하는 파일디스크립터
 		int		listener;
 		int		fdmax;
 		std::vector<std::string> commands;
@@ -39,6 +44,7 @@ class Server
 
 	public:
 		Server(int argc, char **argv);
+		// 서버의 인자 개수 처리 및 패스워드 및 포트 저장
 		virtual ~Server();
 
 		void clear();
@@ -46,6 +52,7 @@ class Server
 		void serv_connect();
 		void server_login();
 		void init_server();
+		//
 		void ssl_init();
 		void main_loop();
 		// 서버와의 통신을 수신하는 함수

@@ -3,18 +3,21 @@
 Server::Server(int argc, char **argv)
 	:  msgofday("HELLO_MADRID"), creationtime("02/09/2019 09:00:00 GMT+1")
 {
+	// 필요한 정보만 저장함
 	int i;
 	int j;
 	std::string argv1;
 
 	if (argc < 3 || argc > 4)
 	{
+		// 인자의 개수가 제대로 들오어지 않은경우 처리
 		std::cout << ("Error:\nArguments. USAGE: ");
 		std::cout << "./ircserv [host:port_network:password_network] <port> <password>\n";
 		exit(EXIT_FAILURE);
 	}
 	this->port = std::string(argv[argc - 2]);
 	this->password = std::string(argv[argc - 1]);
+	// 패스워드 및 포트 저장
 
 	if (argc == 4)
 	{
@@ -24,6 +27,7 @@ Server::Server(int argc, char **argv)
 		j = argv1.find(":", i + 1);
 		this->port_network = argv1.substr(i + 1, j - i - 1);
 		this->password_network = argv1.substr(j + 1, argv1.length() - 1);
+		// 호스트 포트 비밀번호 저장
 	}
 	FD_ZERO(&master);
 	FD_ZERO(&read_fds);
@@ -55,6 +59,7 @@ void Server::clear()
 
 std::string Server::getIp(void)
 {
+	// ip address를 리턴하는 함수
 	return IPADDRESS;
 }
 
@@ -68,20 +73,42 @@ void Server::init_server()
 
 	fcntl(STDOUT_FILENO, F_SETFL, O_NONBLOCK);
 	fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);
+	// stdin stdout 파일디스크립터에 대해 논블락 설정 추가
 	ft_memset(&hints, 0, sizeof hints);
 	//hints.ai_family = PF_INET; //IPV4
 	hints.ai_family = AF_UNSPEC; //IPV4 + IPV6
+	// PF_INET 과 AF_INET의 차이
+	// PF_INET과 AF_INET은 같은값임
+	// PF_INET은 프로토콜로서의 ipv4를 사용하는경우
+	// AF_INET은 주소체계로서의 ipv4를 사용하는경우임
     hints.ai_socktype = SOCK_STREAM;
+	// SOCK_STREAM : tcp
     hints.ai_flags = AI_PASSIVE;
+	// AI_PASSIVE : 소켓을 패시브모드로 오픈함
 	if ((rv = getaddrinfo(0, this->port.c_str(), &hints, &ai)) != 0)
+	{
+		// getaddrinfo = dns기능 수행 / 도메인 주소를 받아와 네트워크 주소를 가져오는는 함수
+		// 1,2,3번 인자를 이용해 데이터를 얻어와 4번 인자에 저장
+		// 사용이후 freeaddrinfo함수를 이용하여 해제해주어야함
+		// 성공하면 0리턴 아닌경우 에러를 리턴함
+		// affrinfo형식의 linked list로 돌려줌
 		ft_perror(strerror(rv));
+	}
 	this->ip = getIp();
+	// getIp = IPADDRESS를 리턴하는 함수
 	for (p = ai; p != NULL; p = p->ai_next)
 	{
+		// 왜 반복문을 돌리는걸까?
+		// 반복문이 돌아간다고 해도 int 변수에 저장하기 때문에 이전의 파일디스크립터를 잃어버릴수 밖에 없음
 		listener = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
 		if (listener < 0)
 			continue;
 		setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
+		// 첫번째 인자 : fd
+		// 두번째 인자 : level / 소켓의 레벨로 어느 레벨의 소켓정보를 가져오거나 변경할지 명시 / SOL_SOCKET와 IPPROTO_TCP 중 하나를 사용한다.
+		// 세번째 인자 : 설정을 위한 소켓옵션 번호 / SO_REUSEADDR : 이미 사용된 주소를 재사용 하도록 한다.
+		// 네번째 인자 : 설정값을 저장히기위한 버퍼의 포인터
+		// 다섯번쨰 인자 : 버버의 크기
 		if (bind(listener, p->ai_addr, p->ai_addrlen) < 0)
 		{
 			close(listener);
@@ -90,16 +117,29 @@ void Server::init_server()
 		break;
 	}
 	if (p == NULL)
+	{
+		// getaddrinfo가 실패한 경우
 		ft_perror("Error: failed to bind.");
+	}
 	if (listen(listener, 10) == -1)
+	{
+		// listen이 실패한 경우
+		// 왜 listen에서 최대 연결개수를 10개로 하였을까?
 		ft_perror("Error: Could not listen.");
+	}
 	print("Server connected.");
 	print(getInfo());
 	FD_SET(listener, &master);
+	// listener를 master그룹으로 설정
 	if (port == SSLPORT)
+	{
+		// ssl연결인경우
 		ssl_init();
+	}
 	this->fdmax = this->listener;
+	// listener를 fdmax로 설정하고, 이후 연결이 늘어날때마다 fdmax를 업데이트하는것 같음
 	freeaddrinfo(ai);
+	// getaddrinfo함수로 부터 받아온 데이터 해제
 }
 
 void Server::serv_connect()
@@ -154,6 +194,7 @@ void Server::main_loop()
 		while(42)
 		{
 			serv_select();
+			std::cout << "fdmax = " << fdmax << std::endl;
 			for (int i = 0; i <= fdmax; ++i)
 			{
 				// 파일디스크립터에 변화가 생긴경우
@@ -246,6 +287,7 @@ void	Server::serv_select()
 	timeout.tv_sec = 2;
 	timeout.tv_usec = 0;
 	read_fds = master;
+	// 모든 파일디스크립터를 master에다 등록했는데, master를 select함수에다가 넣지 않고 read_fds에다가 값을 복사해서 넣을까?
 	if (select(fdmax + 1, &read_fds, STDIN_FILENO, NULL, &timeout) == -1)
 		ft_perror("Error: could not call select.");
 }

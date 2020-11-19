@@ -1,6 +1,7 @@
 #include "../inc/ft_irc.hpp"
 
 Server *pserv;
+// 시그널 처리를 위해 서만 사용되는 값임
 
 void sighandler(int signal)
 {

@@ -637,7 +637,6 @@ void	Server::server(Message &msg)
 	// => 특정한 조건하에서 끊어져야할 연결이 아닌 기존의 연결이 끊어질수도 있음
 	// => 이경우는 프로토콜에 의해 고쳐질 수 없음 / 인간의 중재가 필요함
 
-	std::cout << std::endl << "SERVER MESSGE !!!" << std::endl << std::endl;
 	if (msg.params.size() < 4)
 	{
 		// 파라미터가 충분하지 않은경우
